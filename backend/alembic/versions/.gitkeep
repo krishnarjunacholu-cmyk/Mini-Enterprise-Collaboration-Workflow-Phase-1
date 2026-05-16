@@ -1,0 +1,5 @@
+"""Alembic revision history for database schema changes.
+
+This directory contains migration scripts that track all changes to the database schema.
+Each migration can be applied (upgrade) or rolled back (downgrade).
+"""
