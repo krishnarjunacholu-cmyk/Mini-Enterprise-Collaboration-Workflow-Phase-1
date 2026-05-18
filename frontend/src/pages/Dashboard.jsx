@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import api, { getApiError } from "../api/axios";
+import Alert from "../components/Alert";
+import AppLayout from "../components/AppLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
-import Navbar from "../components/Navbar";
-import Sidebar from "../components/Sidebar";
+import StatCard from "../components/StatCard";
 import TaskCard from "../components/TaskCard";
 import { canCreateTasks, getStoredUser, saveUser } from "../utils/auth";
 
@@ -12,6 +13,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getStoredUser());
   const [tasks, setTasks] = useState([]);
+  const [userNames, setUserNames] = useState({});
   const [assignInputs, setAssignInputs] = useState({});
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -31,6 +33,15 @@ export default function Dashboard() {
       saveUser(meResponse.data);
       setUser(meResponse.data);
       setTasks(tasksResponse.data);
+
+      if (meResponse.data.role === "admin") {
+        const usersResponse = await api.get("/users/");
+        setUserNames(
+          Object.fromEntries(usersResponse.data.map((item) => [item.id, item.name]))
+        );
+      } else {
+        setUserNames({});
+      }
     } catch (err) {
       setError(getApiError(err));
       if (err.response?.status === 401) {
@@ -121,12 +132,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Sidebar user={user} />
-      <Navbar user={user} />
-
-      <main className="px-4 py-6 lg:ml-72 lg:px-8">
-        <div className="mx-auto max-w-7xl">
+    <AppLayout user={user}>
           <section className="dashboard-header">
             <div>
               <p className="text-sm font-medium uppercase tracking-wide text-indigo-700">Workflow overview</p>
@@ -146,10 +152,10 @@ export default function Dashboard() {
           </section>
 
           <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Task summary">
-            <StatCard label="Total tasks" value={stats.total} tone="blue" />
-            <StatCard label="Todo" value={stats.todo} tone="slate" />
-            <StatCard label="In progress" value={stats.inProgress} tone="amber" />
-            <StatCard label="Completed" value={stats.done} tone="green" />
+            <StatCard label="Total tasks" value={stats.total} tone="blue" icon="total" />
+            <StatCard label="Todo" value={stats.todo} tone="slate" icon="todo" />
+            <StatCard label="In progress" value={stats.inProgress} tone="amber" icon="progress" />
+            <StatCard label="Completed" value={stats.done} tone="green" icon="done" />
           </section>
 
           <section className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -188,8 +194,8 @@ export default function Dashboard() {
             </div>
           </section>
 
-          {error && <div className="notice-error mt-4">{error}</div>}
-          {message && <div className="notice-success mt-4">{message}</div>}
+          {error && <Alert className="mt-4">{error}</Alert>}
+          {message && <Alert className="mt-4" type="success">{message}</Alert>}
 
           <section className="mt-6">
             {loading ? (
@@ -215,32 +221,12 @@ export default function Dashboard() {
                     onAssignValueChange={setAssignValue}
                     onDelete={deleteTask}
                     onStatusChange={updateStatus}
+                    userNames={userNames}
                   />
                 ))}
               </div>
             )}
           </section>
-        </div>
-      </main>
-    </div>
-  );
-}
-
-function StatCard({ label, value, tone }) {
-  const tones = {
-    blue: "bg-blue-50 text-blue-700 ring-blue-200",
-    slate: "bg-slate-50 text-slate-700 ring-slate-200",
-    amber: "bg-amber-50 text-amber-800 ring-amber-200",
-    green: "bg-green-50 text-green-700 ring-green-200",
-  };
-
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-3 text-3xl font-bold text-slate-950">{value}</p>
-      <span className={`mt-4 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${tones[tone]}`}>
-        Live
-      </span>
-    </div>
+    </AppLayout>
   );
 }

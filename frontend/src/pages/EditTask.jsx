@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import api, { getApiError } from "../api/axios";
+import Alert from "../components/Alert";
+import AppLayout from "../components/AppLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
-import Navbar from "../components/Navbar";
-import Sidebar from "../components/Sidebar";
 import { getStoredUser, saveUser } from "../utils/auth";
 
 function toDateTimeLocal(value) {
@@ -90,12 +90,8 @@ export default function EditTask() {
   const isEmployee = user?.role === "employee";
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Sidebar user={user} />
-      <Navbar user={user} />
-
-      <main className="px-4 py-6 lg:ml-72 lg:px-8">
-        <div className="mx-auto max-w-3xl">
+    <AppLayout user={user}>
+        <div className="max-w-3xl">
           <div className="mb-6">
             <p className="text-sm font-medium uppercase tracking-wide text-indigo-700">Task details</p>
             <h1 className="mt-2 text-2xl font-bold text-slate-950">Edit Task</h1>
@@ -109,11 +105,11 @@ export default function EditTask() {
               <LoadingSpinner label="Loading task..." />
             </div>
           ) : error && !form ? (
-            <div className="notice-error">{error}</div>
+            <Alert>{error}</Alert>
           ) : (
           <form className="form-panel" onSubmit={submitUpdate}>
-            {error && <div className="notice-error">{error}</div>}
-            {message && <div className="notice-success">{message}</div>}
+            {error && <Alert>{error}</Alert>}
+            {message && <Alert type="success">{message}</Alert>}
 
             {!isEmployee && (
               <>
@@ -186,7 +182,6 @@ export default function EditTask() {
             </form>
           )}
         </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }

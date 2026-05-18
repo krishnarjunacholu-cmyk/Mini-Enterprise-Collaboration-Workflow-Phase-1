@@ -12,6 +12,7 @@ export default function TaskCard({
   onStatusChange,
   assignValue,
   onAssignValueChange,
+  userNames = {},
 }) {
   const showAssign = canAssignTasks(user);
   const showDelete = canDeleteTasks(user);
@@ -33,18 +34,21 @@ export default function TaskCard({
         <dl className="grid gap-3 text-sm text-slate-600 sm:grid-cols-2 xl:w-[28rem]">
           <Meta label="Due date" value={task.due_date ? new Date(task.due_date).toLocaleString() : "None"} />
           <Meta label="Created" value={new Date(task.created_at).toLocaleString()} />
-          <Meta label="Created by" value={`User #${task.created_by_id}`} />
-          <Meta label="Assigned to" value={task.assigned_to_id ? `User #${task.assigned_to_id}` : "Unassigned"} />
+          <Meta label="Created by" value={userNames[task.created_by_id] || `User #${task.created_by_id}`} />
+          <Meta
+            label="Assigned to"
+            value={task.assigned_to_id ? userNames[task.assigned_to_id] || `User #${task.assigned_to_id}` : "Unassigned"}
+          />
         </dl>
       </div>
 
       <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          <Link className="btn-secondary" to={`/tasks/edit/${task.id}`}>
+          <Link className="btn-primary" to={`/tasks/edit/${task.id}`}>
             View/Edit
           </Link>
           {showDelete && (
-            <button className="btn-danger" type="button" onClick={() => onDelete(task.id)}>
+            <button className="btn-danger-outline" type="button" onClick={() => onDelete(task.id)}>
               Delete
             </button>
           )}

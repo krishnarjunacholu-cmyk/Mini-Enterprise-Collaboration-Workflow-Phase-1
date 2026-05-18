@@ -16,6 +16,37 @@ React frontend for Day 3 of the Mini Enterprise Collaboration & Workflow Project
 - Edit task form
 - Role-based UI actions for admin, manager, and employee
 
+## Folder Structure
+
+```text
+frontend/
+├── src/
+│   ├── api/
+│   │   └── axios.js
+│   ├── components/
+│   │   ├── Navbar.jsx
+│   │   ├── ProtectedRoute.jsx
+│   │   ├── TaskCard.jsx
+│   │   ├── Sidebar.jsx
+│   │   ├── StatusBadge.jsx
+│   │   ├── PriorityBadge.jsx
+│   │   └── LoadingSpinner.jsx
+│   ├── pages/
+│   │   ├── Login.jsx
+│   │   ├── Register.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── CreateTask.jsx
+│   │   └── EditTask.jsx
+│   ├── utils/
+│   │   └── auth.js
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+├── package.json
+├── tailwind.config.js
+└── README.md
+```
+
 ## Backend URL
 
 The frontend connects to:
@@ -25,6 +56,15 @@ http://127.0.0.1:8000
 ```
 
 ## Run Frontend
+
+Start the backend first:
+
+```bash
+cd backend
+uvicorn app.main:app --reload
+```
+
+Then start the frontend:
 
 ```bash
 cd frontend
@@ -100,4 +140,12 @@ Employee:
 npm run dev
 npm run build
 npm run preview
+```
+
+## GitHub Commands
+
+```bash
+git add .
+git commit -m "Day 3 frontend dashboard with API integration"
+git push
 ```

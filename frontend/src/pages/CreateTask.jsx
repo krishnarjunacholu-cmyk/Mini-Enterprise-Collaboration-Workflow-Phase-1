@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import api, { getApiError } from "../api/axios";
-import Navbar from "../components/Navbar";
-import Sidebar from "../components/Sidebar";
+import Alert from "../components/Alert";
+import AppLayout from "../components/AppLayout";
 import { canCreateTasks, getStoredUser, saveUser } from "../utils/auth";
 
 const initialForm = {
@@ -60,12 +60,8 @@ export default function CreateTask() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Sidebar user={user} />
-      <Navbar user={user} />
-
-      <main className="px-4 py-6 lg:ml-72 lg:px-8">
-        <div className="mx-auto max-w-3xl">
+    <AppLayout user={user}>
+        <div className="max-w-3xl">
           <div className="mb-6">
             <p className="text-sm font-medium uppercase tracking-wide text-indigo-700">Task management</p>
             <h1 className="mt-2 text-2xl font-bold text-slate-950">Create Task</h1>
@@ -75,10 +71,10 @@ export default function CreateTask() {
           </div>
 
           {!canCreate ? (
-            <div className="notice-error">Access denied. Employees cannot create tasks.</div>
+            <Alert>Access denied. Employees cannot create tasks.</Alert>
           ) : (
             <form className="form-panel" onSubmit={submitTask}>
-              {error && <div className="notice-error">{error}</div>}
+              {error && <Alert>{error}</Alert>}
               <TaskFields form={form} onChange={updateField} />
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button className="btn-primary" type="submit" disabled={loading}>
@@ -91,8 +87,7 @@ export default function CreateTask() {
             </form>
           )}
         </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }
 
