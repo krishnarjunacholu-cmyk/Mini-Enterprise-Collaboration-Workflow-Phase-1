@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import Base, engine
-from app.routers import auth, tasks, users
+from app.routers import approvals, auth, dashboard, tasks, users
 
 
 settings = get_settings()
@@ -72,6 +72,8 @@ def initialize_database() -> None:
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(tasks.router)
+app.include_router(approvals.router)
+app.include_router(dashboard.router)
 
 
 # ============================================================================

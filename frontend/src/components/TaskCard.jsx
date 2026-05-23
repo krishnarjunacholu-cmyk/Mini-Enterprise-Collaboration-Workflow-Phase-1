@@ -66,6 +66,7 @@ export default function TaskCard({
           >
             <option value="todo">todo</option>
             <option value="in_progress">in_progress</option>
+            <option value="review">review</option>
             <option value="done">done</option>
           </select>
 
@@ -96,7 +97,7 @@ export default function TaskCard({
 
 function Meta({ label, value }) {
   return (
-    <div className="rounded-md bg-slate-50 px-3 py-2">
+    <div className="rounded-xl border border-white/70 bg-white/70 px-3 py-2">
       <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt>
       <dd className="mt-1 truncate font-medium text-slate-800">{value}</dd>
     </div>

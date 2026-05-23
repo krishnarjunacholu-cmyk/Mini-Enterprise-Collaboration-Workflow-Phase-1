@@ -32,6 +32,12 @@ export default function Navbar({ user }) {
         >
           Dashboard
         </NavLink>
+        <NavLink
+          className={({ isActive }) => `mobile-nav-link ${isActive ? "mobile-nav-link-active" : ""}`}
+          to="/kanban"
+        >
+          Kanban
+        </NavLink>
         {canCreateTasks(user) && (
           <NavLink
             className={({ isActive }) => `mobile-nav-link ${isActive ? "mobile-nav-link-active" : ""}`}
@@ -40,6 +46,18 @@ export default function Navbar({ user }) {
             Create Task
           </NavLink>
         )}
+        <NavLink
+          className={({ isActive }) => `mobile-nav-link ${isActive ? "mobile-nav-link-active" : ""}`}
+          to="/approvals"
+        >
+          Approvals
+        </NavLink>
+        <NavLink
+          className={({ isActive }) => `mobile-nav-link ${isActive ? "mobile-nav-link-active" : ""}`}
+          to="/approvals/create"
+        >
+          Create Approval
+        </NavLink>
       </nav>
     </header>
   );

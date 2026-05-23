@@ -19,14 +19,23 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Import models for autogenerate
+from app.config import get_settings
 from app.database import Base
-from app.models import Task, User
+from app.models import (
+    Approval,
+    ApprovalHistory,
+    Comment,
+    Task,
+    TaskActivity,
+    TaskStatusHistory,
+    User,
+)
 
 target_metadata = Base.metadata
 
-# Set database URL from environment
-database_url = os.getenv("DATABASE_URL", "sqlite:///test.db")
-config.set_main_option("sqlalchemy.url", database_url)
+# Set database URL from environment or the same settings used by the app.
+database_url = os.getenv("DATABASE_URL") or get_settings().DATABASE_URL
+config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 
 
 def run_migrations_offline() -> None:

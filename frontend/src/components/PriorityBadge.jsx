@@ -1,6 +1,6 @@
 const priorityStyles = {
-  low: "bg-green-50 text-green-700 ring-green-200",
-  medium: "bg-amber-50 text-amber-800 ring-amber-200",
+  low: "bg-slate-100 text-slate-700 ring-slate-200",
+  medium: "bg-blue-50 text-blue-700 ring-blue-200",
   high: "bg-red-50 text-red-700 ring-red-200",
 };
 

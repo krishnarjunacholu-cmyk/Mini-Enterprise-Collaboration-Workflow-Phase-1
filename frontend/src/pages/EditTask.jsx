@@ -5,6 +5,8 @@ import api, { getApiError } from "../api/axios";
 import Alert from "../components/Alert";
 import AppLayout from "../components/AppLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
+import TaskActivity from "../components/TaskActivity";
+import TaskComments from "../components/TaskComments";
 import { getStoredUser, saveUser } from "../utils/auth";
 
 function toDateTimeLocal(value) {
@@ -91,7 +93,8 @@ export default function EditTask() {
 
   return (
     <AppLayout user={user}>
-        <div className="max-w-3xl">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <div>
           <div className="mb-6">
             <p className="text-sm font-medium uppercase tracking-wide text-indigo-700">Task details</p>
             <h1 className="mt-2 text-2xl font-bold text-slate-950">Edit Task</h1>
@@ -101,7 +104,7 @@ export default function EditTask() {
           </div>
 
           {loading ? (
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <LoadingSpinner label="Loading task..." />
             </div>
           ) : error && !form ? (
@@ -136,6 +139,7 @@ export default function EditTask() {
               <select className="input" id="status" name="status" value={form.status} onChange={updateField}>
                 <option value="todo">todo</option>
                 <option value="in_progress">in_progress</option>
+                <option value="review">review</option>
                 <option value="done">done</option>
               </select>
             </div>
@@ -180,6 +184,14 @@ export default function EditTask() {
               </button>
             </div>
             </form>
+          )}
+          </div>
+
+          {!loading && form && (
+            <aside className="space-y-6">
+              <TaskComments taskId={id} user={user} />
+              <TaskActivity taskId={id} />
+            </aside>
           )}
         </div>
     </AppLayout>

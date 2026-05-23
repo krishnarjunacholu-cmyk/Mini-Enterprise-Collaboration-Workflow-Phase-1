@@ -45,16 +45,16 @@ export default function Login() {
   return (
     <main className="auth-shell">
       <section className="auth-grid">
-        <div className="hidden rounded-l-xl bg-blue-800 p-8 text-white md:block">
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-100">Enterprise Collaboration</p>
+        <div className="hidden rounded-l-2xl bg-gradient-to-br from-indigo-600 via-sky-600 to-cyan-600 p-8 text-white md:block">
+          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-100">Enterprise Collaboration</p>
           <h1 className="mt-5 text-3xl font-bold leading-tight">Plan work, assign ownership, and track progress.</h1>
-          <p className="mt-4 text-sm leading-6 text-blue-100">
+          <p className="mt-4 text-sm leading-6 text-indigo-50">
             A secure role-based workspace for admins, managers, and employees to collaborate on tasks.
           </p>
-          <div className="mt-8 grid gap-3 text-sm text-blue-50">
-            <span className="rounded-lg bg-white/10 px-3 py-2">JWT authentication</span>
-            <span className="rounded-lg bg-white/10 px-3 py-2">Role-based dashboards</span>
-            <span className="rounded-lg bg-white/10 px-3 py-2">Task assignment workflow</span>
+          <div className="mt-8 grid gap-3 text-sm text-indigo-50">
+            <span className="rounded-xl bg-white/15 px-3 py-2 ring-1 ring-white/20">JWT authentication</span>
+            <span className="rounded-xl bg-white/15 px-3 py-2 ring-1 ring-white/20">Role-based dashboards</span>
+            <span className="rounded-xl bg-white/15 px-3 py-2 ring-1 ring-white/20">Task assignment workflow</span>
           </div>
         </div>
 
@@ -107,7 +107,7 @@ export default function Login() {
 
           <p className="mt-5 text-center text-sm text-slate-600">
             Need an account?{" "}
-            <Link className="font-medium text-blue-700 hover:text-blue-800" to="/register">
+            <Link className="font-medium text-indigo-600 hover:text-indigo-700" to="/register">
               Register
             </Link>
           </p>

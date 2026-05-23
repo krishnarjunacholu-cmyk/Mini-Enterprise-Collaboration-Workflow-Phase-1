@@ -17,6 +17,7 @@ ALLOWED_ROLES = Literal["admin", "manager", "employee"]
 class TaskStatusEnum(str, Enum):
     TODO = "todo"
     IN_PROGRESS = "in_progress"
+    REVIEW = "review"
     DONE = "done"
 
 
@@ -186,7 +187,168 @@ class TaskOut(BaseModel):
     due_date: datetime | None
     created_by_id: int
     assigned_to_id: int | None
+    updated_by_id: int | None
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TaskStatusUpdate(BaseModel):
+    """
+    Schema for workflow status updates.
+    """
+    status: str = Field(..., description="New workflow status")
+    comment: str | None = Field(default=None, description="Optional status note")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "status": "in_progress",
+                "comment": "Started working on this task",
+            }
+        }
+    )
+
+
+class TaskStatusHistoryOut(BaseModel):
+    """
+    Schema for task status history responses.
+    """
+    id: int
+    task_id: int
+    old_status: str
+    new_status: str
+    changed_by_id: int
+    comment: str | None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class KanbanTaskOut(TaskOut):
+    """
+    Task output shape used by Kanban board responses.
+    """
+    pass
+
+
+class KanbanBoardOut(BaseModel):
+    """
+    Tasks grouped by Kanban workflow status.
+    """
+    todo: list[KanbanTaskOut]
+    in_progress: list[KanbanTaskOut]
+    review: list[KanbanTaskOut]
+    done: list[KanbanTaskOut]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CommentCreate(BaseModel):
+    """
+    Schema for creating task comments and internal notes.
+    """
+    content: str = Field(..., min_length=1, description="Comment text")
+    is_internal: bool = Field(default=False, description="Internal note flag")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "content": "Please update the progress before evening.",
+                "is_internal": False,
+            }
+        }
+    )
+
+
+class CommentOut(BaseModel):
+    """
+    Schema for task comment responses.
+    """
+    id: int
+    task_id: int
+    user_id: int
+    content: str
+    is_internal: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TaskActivityOut(BaseModel):
+    """
+    Schema for task activity log responses.
+    """
+    id: int
+    task_id: int
+    user_id: int
+    action: str
+    details: str | None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ApprovalCreate(BaseModel):
+    """
+    Schema for creating approval requests.
+    """
+    title: str = Field(..., min_length=1, max_length=255)
+    description: str | None = None
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "title": "Request for task completion approval",
+                "description": "Please review and approve the completed work.",
+            }
+        }
+    )
+
+
+class ApprovalAction(BaseModel):
+    """
+    Schema for manager/admin approval actions.
+    """
+    action: str = Field(..., description="approve, reject, or hold")
+    comment: str | None = None
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "action": "approve",
+                "comment": "Approved by manager",
+            }
+        }
+    )
+
+
+class ApprovalOut(BaseModel):
+    """
+    Schema for approval request responses.
+    """
+    id: int
+    title: str
+    description: str | None
+    requested_by_id: int
+    status: str
+    current_level: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ApprovalHistoryOut(BaseModel):
+    """
+    Schema for approval history responses.
+    """
+    id: int
+    approval_id: int
+    action_by_id: int
+    action: str
+    comment: str | None
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
