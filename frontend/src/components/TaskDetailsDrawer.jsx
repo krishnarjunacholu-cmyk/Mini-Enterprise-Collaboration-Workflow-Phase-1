@@ -5,6 +5,7 @@ import PriorityBadge from "./PriorityBadge";
 import StatusBadge from "./StatusBadge";
 import TaskActivity from "./TaskActivity";
 import TaskComments from "./TaskComments";
+import TaskStatusHistory from "./TaskStatusHistory";
 import { canAssignTasks, canDeleteTasks } from "../utils/auth";
 
 function formatDate(value) {
@@ -134,6 +135,7 @@ export default function TaskDetailsDrawer({
           </section>
 
           <TaskComments taskId={task.id} user={currentUser} />
+          <TaskStatusHistory taskId={task.id} />
           <TaskActivity taskId={task.id} />
         </div>
       </aside>

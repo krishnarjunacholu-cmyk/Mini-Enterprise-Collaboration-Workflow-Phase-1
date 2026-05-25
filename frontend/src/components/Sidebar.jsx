@@ -34,7 +34,7 @@ export default function Sidebar({ user }) {
         </NavLink>
         <NavLink
           className={({ isActive }) => `sidebar-link ${isActive ? "sidebar-link-active" : ""}`}
-          to="/dashboard"
+          to="/tasks"
         >
           {user?.role === "employee" ? "My Tasks" : "Tasks"}
         </NavLink>

@@ -26,11 +26,12 @@ export default function Approvals() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getStoredUser());
   const [approvals, setApprovals] = useState([]);
-  const [actionState, setActionState] = useState({});
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [pendingAction, setPendingAction] = useState(null);
+  const [actionComment, setActionComment] = useState("");
 
   const loadApprovals = useCallback(async () => {
     setError("");
@@ -62,40 +63,53 @@ export default function Approvals() {
 
   const visibleActions = useMemo(() => approvals.filter((approval) => canAct(user, approval)).length, [approvals, user]);
 
-  function updateActionState(approvalId, field, value) {
-    setActionState((current) => ({
-      ...current,
-      [approvalId]: {
-        action: "approve",
-        comment: "",
-        ...(current[approvalId] || {}),
-        [field]: value,
-      },
-    }));
-  }
-
-  async function submitAction(approvalId) {
-    const data = actionState[approvalId] || { action: "approve", comment: "" };
-    if (data.action === "reject" && !data.comment.trim()) {
+  async function submitAction(approval, action, commentValue = "") {
+    const comment = commentValue.trim();
+    if (action === "reject" && !comment.trim()) {
       setError("Rejection requires a comment");
       return;
     }
 
-    setSavingId(approvalId);
+    const defaultComment =
+      action === "approve"
+        ? `Approved by ${user?.role || "user"}`
+        : action === "hold"
+          ? comment
+          : comment;
+
+    setSavingId(approval.id);
     setError("");
     setMessage("");
     try {
-      await api.patch(`/approvals/${approvalId}/action`, {
-        action: data.action,
-        comment: data.comment || null,
+      await api.patch(`/approvals/${approval.id}/action`, {
+        action,
+        comment: defaultComment || null,
       });
       setMessage("Approval action saved.");
+      setPendingAction(null);
+      setActionComment("");
       await loadApprovals();
     } catch (err) {
       setError(getApiError(err));
     } finally {
       setSavingId(null);
     }
+  }
+
+  function openActionModal(approval, action) {
+    setError("");
+    setPendingAction({ approval, action });
+    setActionComment("");
+  }
+
+  function closeActionModal() {
+    setPendingAction(null);
+    setActionComment("");
+  }
+
+  async function confirmPendingAction() {
+    if (!pendingAction) return;
+    await submitAction(pendingAction.approval, pendingAction.action, actionComment);
   }
 
   return (
@@ -127,9 +141,7 @@ export default function Approvals() {
             <h2 className="text-lg font-semibold text-slate-950">No approval requests</h2>
             <p className="mt-2 text-sm text-slate-600">Create an approval request to start the workflow.</p>
           </div>
-        ) : approvals.map((approval) => {
-          const state = actionState[approval.id] || { action: "approve", comment: "" };
-          return (
+        ) : approvals.map((approval) => (
             <article
               className={`rounded-2xl border p-5 shadow-sm ${approvalCardStyles[approval.status] || "border-slate-200 bg-white"}`}
               key={approval.id}
@@ -155,36 +167,86 @@ export default function Approvals() {
               </div>
 
               {canAct(user, approval) && (
-                <div className="mt-5 grid gap-3 border-t border-slate-100 pt-4 lg:grid-cols-[160px_1fr_auto]">
-                  <select
-                    className="input"
-                    value={state.action}
-                    onChange={(event) => updateActionState(approval.id, "action", event.target.value)}
-                  >
-                    <option value="approve">approve</option>
-                    <option value="reject">reject</option>
-                    <option value="hold">hold</option>
-                  </select>
-                  <input
-                    className="input"
-                    placeholder={state.action === "reject" ? "Comment required for rejection" : "Comment optional"}
-                    value={state.comment}
-                    onChange={(event) => updateActionState(approval.id, "comment", event.target.value)}
-                  />
-                  <button
-                    className="btn-primary"
-                    disabled={savingId === approval.id}
-                    type="button"
-                    onClick={() => submitAction(approval.id)}
-                  >
-                    {savingId === approval.id ? "Saving..." : "Submit Action"}
-                  </button>
+                <div className="mt-5 space-y-3 border-t border-slate-100 pt-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <button
+                      className="inline-flex min-h-10 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={savingId === approval.id}
+                      type="button"
+                      onClick={() => submitAction(approval, "approve")}
+                    >
+                      {savingId === approval.id ? "Saving..." : "Approve"}
+                    </button>
+                    <button
+                      className="inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={savingId === approval.id}
+                      type="button"
+                      onClick={() => openActionModal(approval, "reject")}
+                    >
+                      Reject
+                    </button>
+                    <button
+                      className="inline-flex min-h-10 items-center justify-center rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-700 shadow-sm transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={savingId === approval.id}
+                      type="button"
+                      onClick={() => openActionModal(approval, "hold")}
+                    >
+                      Hold
+                    </button>
+                    <Link className="btn-secondary" to={`/approvals/${approval.id}/history`}>
+                      View History
+                    </Link>
+                  </div>
                 </div>
               )}
             </article>
-          );
-        })}
+        ))}
       </section>
+
+      {pendingAction && (
+        <div className="fixed inset-0 z-50">
+          <button
+            aria-label="Close approval action"
+            className="absolute inset-0 bg-slate-950/30"
+            type="button"
+            onClick={closeActionModal}
+          />
+          <div className="absolute left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
+              {pendingAction.action} approval
+            </p>
+            <h2 className="mt-2 text-xl font-bold text-slate-950">{pendingAction.approval.title}</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              {pendingAction.action === "reject"
+                ? "Add a rejection reason before submitting."
+                : "Add an optional hold note before submitting."}
+            </p>
+            <textarea
+              className="input mt-4 min-h-28"
+              placeholder={pendingAction.action === "reject" ? "Rejection comment required" : "Hold comment optional"}
+              value={actionComment}
+              onChange={(event) => setActionComment(event.target.value)}
+            />
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button className="btn-secondary" type="button" onClick={closeActionModal}>
+                Cancel
+              </button>
+              <button
+                className={
+                  pendingAction.action === "reject"
+                    ? "inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    : "inline-flex min-h-10 items-center justify-center rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-700 shadow-sm transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+                }
+                disabled={savingId === pendingAction.approval.id}
+                type="button"
+                onClick={confirmPendingAction}
+              >
+                {savingId === pendingAction.approval.id ? "Saving..." : pendingAction.action === "reject" ? "Reject Approval" : "Hold Approval"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }

@@ -10,6 +10,7 @@ import EditTask from "./pages/EditTask";
 import KanbanBoard from "./pages/KanbanBoard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Tasks from "./pages/Tasks";
 
 function DefaultRoute() {
   return localStorage.getItem("token") ? (
@@ -28,6 +29,7 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/kanban" element={<KanbanBoard />} />
+        <Route path="/tasks" element={<Tasks />} />
         <Route path="/tasks/create" element={<CreateTask />} />
         <Route path="/tasks/edit/:id" element={<EditTask />} />
         <Route path="/approvals" element={<Approvals />} />

@@ -38,6 +38,12 @@ export default function Navbar({ user }) {
         >
           Kanban
         </NavLink>
+        <NavLink
+          className={({ isActive }) => `mobile-nav-link ${isActive ? "mobile-nav-link-active" : ""}`}
+          to="/tasks"
+        >
+          {user?.role === "employee" ? "My Tasks" : "Tasks"}
+        </NavLink>
         {canCreateTasks(user) && (
           <NavLink
             className={({ isActive }) => `mobile-nav-link ${isActive ? "mobile-nav-link-active" : ""}`}

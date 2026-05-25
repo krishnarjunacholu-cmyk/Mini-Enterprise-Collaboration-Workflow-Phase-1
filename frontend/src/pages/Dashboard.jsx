@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import api, { getApiError } from "../api/axios";
@@ -6,7 +6,6 @@ import Alert from "../components/Alert";
 import AppLayout from "../components/AppLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatCard from "../components/StatCard";
-import TaskCard from "../components/TaskCard";
 import { canCreateTasks, getStoredUser, saveUser } from "../utils/auth";
 
 const emptySummary = {
@@ -62,12 +61,7 @@ export default function Dashboard() {
   const [priorityDistribution, setPriorityDistribution] = useState({});
   const [approvalSummary, setApprovalSummary] = useState({});
   const [recentActivity, setRecentActivity] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [userNames, setUserNames] = useState({});
-  const [assignInputs, setAssignInputs] = useState({});
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [message, setMessage] = useState("");
+  const [message] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -78,7 +72,6 @@ export default function Dashboard() {
     try {
       const [
         meResponse,
-        tasksResponse,
         summaryResponse,
         taskDistributionResponse,
         priorityDistributionResponse,
@@ -86,7 +79,6 @@ export default function Dashboard() {
         recentActivityResponse,
       ] = await Promise.all([
         api.get("/auth/me"),
-        api.get("/tasks/"),
         api.get("/dashboard/summary"),
         api.get("/dashboard/task-distribution"),
         api.get("/dashboard/priority-distribution"),
@@ -96,19 +88,11 @@ export default function Dashboard() {
 
       saveUser(meResponse.data);
       setUser(meResponse.data);
-      setTasks(tasksResponse.data);
       setSummary(summaryResponse.data);
       setTaskDistribution(taskDistributionResponse.data);
       setPriorityDistribution(priorityDistributionResponse.data);
       setApprovalSummary(approvalSummaryResponse.data);
       setRecentActivity(recentActivityResponse.data);
-
-      if (meResponse.data.role === "admin") {
-        const usersResponse = await api.get("/users/");
-        setUserNames(Object.fromEntries(usersResponse.data.map((item) => [item.id, item.name])));
-      } else {
-        setUserNames({});
-      }
     } catch (err) {
       setError(getApiError(err));
       if (err.response?.status === 401) {
@@ -125,72 +109,6 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadDashboard();
   }, [loadDashboard]);
-
-  const visibleTasks = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return tasks.filter((task) => {
-      const matchesSearch =
-        !query ||
-        task.title.toLowerCase().includes(query) ||
-        (task.description || "").toLowerCase().includes(query);
-      const matchesStatus = statusFilter === "all" || task.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [tasks, search, statusFilter]);
-
-  function setAssignValue(taskId, value) {
-    setAssignInputs((current) => ({ ...current, [taskId]: value }));
-  }
-
-  async function updateStatus(taskId, status) {
-    setError("");
-    setMessage("");
-    try {
-      const response = await api.patch(`/tasks/${taskId}/status`, {
-        status,
-        comment: "Status updated from dashboard",
-      });
-      setTasks((current) => current.map((task) => (task.id === taskId ? response.data : task)));
-      setMessage("Task status updated.");
-      await loadDashboard();
-    } catch (err) {
-      setError(getApiError(err));
-    }
-  }
-
-  async function assignTask(taskId) {
-    setError("");
-    setMessage("");
-
-    const assignedToId = Number(assignInputs[taskId]);
-    if (!assignedToId) {
-      setError("Enter a valid user id before assigning.");
-      return;
-    }
-
-    try {
-      const response = await api.patch(`/tasks/${taskId}/assign`, { assigned_to_id: assignedToId });
-      setTasks((current) => current.map((task) => (task.id === taskId ? response.data : task)));
-      setMessage("Task assigned successfully.");
-      await loadDashboard();
-    } catch (err) {
-      setError(getApiError(err));
-    }
-  }
-
-  async function deleteTask(taskId) {
-    setError("");
-    setMessage("");
-
-    try {
-      await api.delete(`/tasks/${taskId}`);
-      setTasks((current) => current.filter((task) => task.id !== taskId));
-      setMessage("Task deleted successfully.");
-      await loadDashboard();
-    } catch (err) {
-      setError(err.response?.status === 403 ? "You do not have permission to delete this task." : getApiError(err));
-    }
-  }
 
   return (
     <AppLayout user={user}>
@@ -231,84 +149,47 @@ export default function Dashboard() {
         <DistributionBars title="Approval summary" data={approvalSummary} />
       </section>
 
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-        <div className="grid gap-3 lg:grid-cols-[1fr_180px_auto] lg:items-end">
-          <div>
-            <label className="field-label" htmlFor="task-search">Search tasks</label>
-            <input
-              className="input"
-              id="task-search"
-              placeholder="Search by title or description"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
+      <section className="mt-6 space-y-6">
+        {loading ? (
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+            <LoadingSpinner label="Loading dashboard..." />
           </div>
-          <div>
-            <label className="field-label" htmlFor="status-filter">Status</label>
-            <select
-              className="input"
-              id="status-filter"
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
-              <option value="all">All</option>
-              <option value="todo">todo</option>
-              <option value="in_progress">in_progress</option>
-              <option value="review">review</option>
-              <option value="done">done</option>
-            </select>
-          </div>
-          <button className="btn-secondary" type="button" onClick={loadDashboard}>Refresh</button>
-        </div>
-      </section>
-
-      <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
-        <div>
-          {loading ? (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
-              <LoadingSpinner label="Loading dashboard..." />
-            </div>
-          ) : visibleTasks.length === 0 ? (
-            <div className="empty-state">
-              <h2 className="text-lg font-semibold text-slate-950">No tasks found</h2>
-              <p className="mt-2 text-sm text-slate-600">No tasks match your role and filters.</p>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {visibleTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  user={user}
-                  assignValue={assignInputs[task.id]}
-                  onAssign={assignTask}
-                  onAssignValueChange={setAssignValue}
-                  onDelete={deleteTask}
-                  onStatusChange={updateStatus}
-                  userNames={userNames}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        <aside className="h-fit lg:sticky lg:top-6">
+        ) : (
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-base font-semibold text-slate-950">Recent Activity</h2>
-            <div className="mt-5 space-y-4">
-              {recentActivity.length === 0 ? (
-                <p className="text-sm text-slate-500">No recent activity yet.</p>
-              ) : recentActivity.map((item, index) => (
-                <article className="border-l-2 border-indigo-200 pl-4" key={`${item.type}-${item.created_at}-${index}`}>
-                  <p className="text-sm font-semibold text-slate-950">{item.message}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {item.type.replaceAll("_", " ")} | User #{item.user_id} | {new Date(item.created_at).toLocaleString()}
-                  </p>
-                </article>
-              ))}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-slate-950">Dashboard Actions</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Open the dedicated task list or Kanban board to manage workflow items.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Link className="btn-secondary" to="/tasks">
+                  View Tasks
+                </Link>
+                <Link className="btn-secondary" to="/kanban">
+                  Open Kanban
+                </Link>
+              </div>
             </div>
           </section>
-        </aside>
+        )}
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-base font-semibold text-slate-950">Recent Activity</h2>
+          <div className="mt-5 space-y-4">
+            {recentActivity.length === 0 ? (
+              <p className="text-sm text-slate-500">No recent activity yet.</p>
+            ) : recentActivity.map((item, index) => (
+              <article className="border-l-2 border-indigo-200 pl-4" key={`${item.type}-${item.created_at}-${index}`}>
+                <p className="text-sm font-semibold text-slate-950">{item.message}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {item.type.replaceAll("_", " ")} | User #{item.user_id} | {new Date(item.created_at).toLocaleString()}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
       </section>
     </AppLayout>
   );

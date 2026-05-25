@@ -7,6 +7,7 @@ import AppLayout from "../components/AppLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
 import TaskActivity from "../components/TaskActivity";
 import TaskComments from "../components/TaskComments";
+import TaskStatusHistory from "../components/TaskStatusHistory";
 import { getStoredUser, saveUser } from "../utils/auth";
 
 function toDateTimeLocal(value) {
@@ -190,6 +191,7 @@ export default function EditTask() {
           {!loading && form && (
             <aside className="space-y-6">
               <TaskComments taskId={id} user={user} />
+              <TaskStatusHistory taskId={id} />
               <TaskActivity taskId={id} />
             </aside>
           )}
